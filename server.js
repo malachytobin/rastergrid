@@ -1,0 +1,32 @@
+var express = require('express');
+rastergrid = require('./routes/rastergrid');
+ 
+var app = express();
+ 
+//  app.configure(function () {
+//     app.use(express.logger('dev'));     // 'default', 'short', 'tiny', 'dev' 
+//     app.use(express.bodyParser());
+// });
+
+//set path to the views (template) directory
+app.set('views', __dirname + '/views');
+//set path to static files
+app.use(express.static(__dirname + '/public'));
+//handle GET requests on /
+app.get('/', function(req, res){res.render('index.jade', {title: 'Malachy'});});
+
+
+app.get('/*', function(req,res,next){
+	res.header('Access-Control-Allow-Origin', '*');
+	next();
+});
+
+app.get('/rastergrid', rastergrid.geojson);
+app.get('/slow', rastergrid.slow);
+// app.get('/rastergrid/:id', rastergrid.findById);
+// app.post('/rastergrid', wines.addWine);
+// app.put('/rastergrid/:id', wines.updateWine);
+// app.delete('/rastergrid/:id', wines.deleteWine);
+ 
+app.listen(3000);
+console.log('Listening on port 3000...');

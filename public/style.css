@@ -1,0 +1,71 @@
+#map { height: 580px; 
+		width: 800px; 
+		position:absolute;
+        float:left;
+		left:8px;
+		top:155px;
+		/*padding: 10px;*/
+	}
+
+#getOverlay{
+    float:right;
+}
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+/*#ui-datepicker-div { font-size:11px; }*/
+
+.ui-widget { font-size:11px; }
+
+.panel {
+	width:300px;
+	float:left;
+	height:550px;
+	/*background:#d9dada;*/
+	background:#EBEBEB;
+	position:relative;
+	left:-300px;
+	z-index: 1008;
+}
+
+.slider-arrow{
+	padding: 5px;
+	width: 10px;
+    height:14px;
+	float:left;
+	background:#EBEBEB;
+	font:400 12px Arial, Helvetica, sans-serif;
+	color:#000;
+	text-decoration:none;
+	position:relative;
+	left:-300px;
+}
+
+.custom-combobox {
+    position: relative;
+    display: inline-block;
+  }
+  .custom-combobox-toggle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    margin-left: -1px;
+    padding: 0;
+    /* support: IE7 */
+    *height: 1.7em;
+    *top: 0.1em;
+  }
+  .custom-combobox-input {
+    margin: 0;
+    padding: 0.3em;
+  }

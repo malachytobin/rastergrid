@@ -1,0 +1,46 @@
+html
+  head
+    link(rel='stylesheet', href='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css')
+    link(rel='stylesheet', href='/jquery-ui.css')
+    link(rel='stylesheet', href='/style.css')
+    script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js')
+    script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js')
+    script(type='text/javascript', src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js')
+    script(type='text/javascript', src='/chicago_malachy.js')
+    script.
+      $(document).ready(function(){
+      //- var geojson;
+      //- var info = L.control();
+      Window.map = L.map('map').setView([41.8819, -87.6278], 11);
+      var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+      var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 18, attribution: osmAttrib});
+      Window.map.addLayer(osm);
+      });
+      $(function() {
+      $( ".datepicker" ).datepicker();
+      });
+block content
+  h1= title
+  a(href='http://www.mollyeach.com/') Momoeh
+  p Welcome to #{title}
+  div(class="panel")
+    div(class="ui-widget")
+      p Data Source:
+        select(id="datasource_combo")
+          option(value="") Select one...
+          option(value="rodent_baiting") Rodent Baiting
+          option(value="potholes") Pot Holes
+    div(class="ui-widget")
+      p Status:
+        select(id="status_combo")
+          option(value="") Select one...
+          option(value="Open") Open
+          option(value="Closed") Closed
+      p Start Date:   
+        input(class="datepicker"  type="text" id="startDate")
+      p End Date:   
+        input(class="datepicker"  type="text" id="endDate")
+    button#getOverlay(onClick="callServiceForOverlay()") Get Raster Overlay
+  a(href="javascript:void(0)", class="slider-arrow show")&raquo
+  div#map
