@@ -22,19 +22,21 @@ html
       });
 block content
   h1= title
-  a(href='http://www.mollyeach.com/') Momoeh
-  p Welcome to #{title}
+  p This site uses 
+    a(href='https://data.cityofchicago.org/' target='_blank') Chicago Open Data
+    text  to generate grid based heat maps to measure the intensity of different 311 service requests
+  p Just a demo site at the moment
   div(class="panel")
     div(class="ui-widget")
       p Data Source:
         select(id="datasource_combo")
           option(value="") Select one...
           option(value="rodent_baiting") Rodent Baiting
-          option(value="potholes") Pot Holes
+          option(value="abandoned_buildings") Abandoned Buildings
     div(class="ui-widget")
       p Status:
         select(id="status_combo")
-          option(value="") Select one...
+          option(value="All") All
           option(value="Open") Open
           option(value="Closed") Closed
       p Start Date:   
@@ -42,5 +44,5 @@ block content
       p End Date:   
         input(class="datepicker"  type="text" id="endDate")
     button#getOverlay(onClick="callServiceForOverlay()") Get Raster Overlay
-  a(href="javascript:void(0)", class="slider-arrow show")&raquo
+  a(href="javascript:void(0)", class="slider-arrow show") &raquo
   div#map

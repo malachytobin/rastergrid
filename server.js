@@ -13,7 +13,7 @@ app.set('views', __dirname + '/views');
 //set path to static files
 app.use(express.static(__dirname + '/public'));
 //handle GET requests on /
-app.get('/', function(req, res){res.render('index.jade', {title: 'Malachy'});});
+app.get('/', function(req, res){res.render('index.jade', {title: 'Raster Grid Demo'});});
 
 
 app.get('/*', function(req,res,next){

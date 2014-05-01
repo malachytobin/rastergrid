@@ -34,7 +34,7 @@ exports.geojson = function(req, res) {
 	features = [];
 	gridSum["length"]=0;
 	getSumValues(_get, function(err, data){
-		console.log("data and number of gridsums " + data + gridSum["length"]);
+		console.log("data and number of gridsums " + gridSum["length"]);
 		// res.send({"hello":"world"});
 		// once we get the gridSum values, need to loop through features array to add value
 		// res.send(JSON.stringify(gridSum));
@@ -111,7 +111,7 @@ function getSumValues(getParams, func) {
 							
 								features.push(createFeature("Feature",grid.grid_id, null, "Polygon",grid.geoCoordsJson));
 														// 
-							callGoodFunction(grid.grid_id, getParams, function(err, rod_items){
+							findNearbyGridPointsAndSum(grid.grid_id, getParams, function(err, rod_items){
 								// gridSum[grid.grid_id] = 11.1;
 								i++;
 								if(i==grids.length){
@@ -130,13 +130,21 @@ function getSumValues(getParams, func) {
 
 };
 
+function getGridPtVal(distFt, radiusFt){
+	if(distFt<radiusFt){
+		return 1/radiusFt;
+	}else{
+		return 1/distFt;
+	}
+};
 
-
-function callGoodFunction(gridId, getParams, callback ){
+function findNearbyGridPointsAndSum(gridId, getParams, callback){
 	// console.log("here we are");
-			db.collection('rodent_baiting', function(err, collection){
+	collectionName = getParams["type"];
+
+			db.collection(collectionName, function(err, collection){
 				var qry = {'gridPts.grid_id':{'$in':[gridId]}};
-				if(getParams["status"]){
+				if(getParams["status"] && getParams["status"]!="All"){
 					qry = {$and:[{"gridPts.grid_id":{"$in":[gridId]}},{"status":getParams["status"]}]}
 				}
 				collection.find(qry).toArray(function(err, rod_items){
@@ -146,9 +154,9 @@ function callGoodFunction(gridId, getParams, callback ){
 							var gridpts_entry = rod.gridPts[i];
 							if(gridpts_entry.grid_id===gridId){
 								if(gridSum[gridId]>0){
-									gridSum[gridId]+= 1/gridpts_entry.distanceFt;	
+									gridSum[gridId]+= getGridPtVal(gridpts_entry.distanceFt, 660);	
 								}else{
-									gridSum[gridId] = 1/gridpts_entry.distanceFt;	
+									gridSum[gridId] = getGridPtVal(gridpts_entry.distanceFt, 660);	
 									gridSum["length"]++;	
 								}
 								

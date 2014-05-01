@@ -36,7 +36,7 @@ function callServiceForOverlay(){
 	
 	$.ajax({
     	type: "GET",
-    	url: "http://localhost:3000/rastergrid?type=" + dataSourceType + "&startdate=20140101" + status,
+    	url: "/rastergrid?type=" + dataSourceType + "&startdate=20140101" + status,
     	dataType: 'json',
     	success: function (response) {
         	    geojson = L.geoJson(response, {
@@ -93,8 +93,8 @@ function highlightFeature(e) {
 	    info.update(layer.feature.properties);
 }
 function getColor(d) {
-    return d > .05 ? '#800026' :
-           d > .030 ? '#BD0026' :
+    return d > .06 ? '#800026' :
+           d > .040 ? '#BD0026' :
            d > .020 ? '#E31A1C' :
            d > .010 ? '#FC4E2A' :
            d > .008 ? '#FD8D3C' :
@@ -112,7 +112,7 @@ info.onAdd = function (map) {
 
 	// method that we will use to update the control based on feature properties passed
 info.update = function (props) {
-    this._div.innerHTML = '<h4>US Population Density</h4>' +  (props ?
-        '<b>' + props.name + '</b><br />' + props.value + ' people / mi<sup>2</sup>'
-        : 'Hover over a state');
+    this._div.innerHTML = '<h4>Grid Value</h4>' +  (props ?
+        '<b>' + props.name + '</b><br />' + props.value + ' units'
+        : 'Hover over a grid');
 };
