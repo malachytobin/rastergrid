@@ -2,11 +2,15 @@
 		width: 800px; 
 		position:absolute;
         float:left;
-		left:8px;
-		top:155px;
+		left:0px;
+		top:24px;
 		/*padding: 10px;*/
 	}
-
+#mappanel{
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
 #getOverlay{
     float:right;
 }

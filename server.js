@@ -14,7 +14,7 @@ app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + '/public'));
 //handle GET requests on /
 app.get('/', function(req, res){res.render('index.jade', {title: 'Raster Grid Demo'});});
-
+app.get('/sortTable', function(req, res){res.render('sortTable.jade', {title:"311 Service Requests By Ward"});});
 
 app.get('/*', function(req,res,next){
 	res.header('Access-Control-Allow-Origin', '*');
@@ -22,6 +22,7 @@ app.get('/*', function(req,res,next){
 });
 
 app.get('/rastergrid', rastergrid.geojson);
+app.get('/wardSums', rastergrid.wardSums);
 app.get('/slow', rastergrid.slow);
 // app.get('/rastergrid/:id', rastergrid.findById);
 // app.post('/rastergrid', wines.addWine);

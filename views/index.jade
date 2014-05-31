@@ -16,6 +16,9 @@ html
       var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
       var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 18, attribution: osmAttrib});
       Window.map.addLayer(osm);
+
+      var wardGeoJson = "/temporary/Wards.json"
+      addGeoJsonToMap(wardGeoJson);
       });
       $(function() {
       $( ".datepicker" ).datepicker();
@@ -25,24 +28,24 @@ block content
   p This site uses 
     a(href='https://data.cityofchicago.org/' target='_blank') Chicago Open Data
     text  to generate grid based heat maps to measure the intensity of different 311 service requests
-  p Just a demo site at the moment
-  div(class="panel")
-    div(class="ui-widget")
-      p Data Source:
-        select(id="datasource_combo")
-          option(value="") Select one...
-          option(value="rodent_baiting") Rodent Baiting
-          option(value="abandoned_buildings") Abandoned Buildings
-    div(class="ui-widget")
-      p Status:
-        select(id="status_combo")
-          option(value="All") All
-          option(value="Open") Open
-          option(value="Closed") Closed
-      p Start Date:   
-        input(class="datepicker"  type="text" id="startDate")
-      p End Date:   
-        input(class="datepicker"  type="text" id="endDate")
-    button#getOverlay(onClick="callServiceForOverlay()") Get Raster Overlay
-  a(href="javascript:void(0)", class="slider-arrow show") &raquo
-  div#map
+  p Click on the double arrow (&raquo) on the top left of the map to request a raster grid overlay
+  div#mappanel
+    div(class="panel")
+      div(class="ui-widget")
+        p Data Source:
+          select(id="datasource_combo")
+            option(value="rodent_baiting") Rodent Baiting
+            option(value="abandoned_buildings") Abandoned Buildings
+      div(class="ui-widget")
+        p Status:
+          select(id="status_combo")
+            option(value="All") All
+            option(value="Open") Open
+            option(value="Closed") Closed
+        p Start Date:   
+          input(class="datepicker"  type="text" id="startDate")
+        p End Date:   
+          input(class="datepicker"  type="text" id="endDate")
+      button#getOverlay(onClick="callServiceForOverlay()") Get Raster Overlay
+    a(href="javascript:void(0)", class="slider-arrow show") &raquo
+    div#map

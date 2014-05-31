@@ -25,10 +25,20 @@ var geojson;
 function callServiceForOverlay(){
 	var dataSourceType = $("#datasource_combo").val();
 	var status = "";
+  var startdate="";
+  var enddate="";
 
 	if($("#status_combo").val().length>0){
-		status = "&status" + $("#status_combo").val();
+		status = "&status=" + $("#status_combo").val();
 	};
+
+  if($("#startDate").val().length>0){
+    startdate = "&startdate=" + encodeURIComponent($("#startDate").val());
+  };
+
+  if($("#endDate").val().length>0){
+    enddate = "&enddate=" + encodeURIComponent($("#endDate").val());
+  };
 	// console.log(dataSourceType);
 	if(geojson){
 		geojson.clearLayers();
@@ -36,7 +46,7 @@ function callServiceForOverlay(){
 	
 	$.ajax({
     	type: "GET",
-    	url: "/rastergrid?type=" + dataSourceType + "&startdate=20140101" + status,
+    	url: "/rastergrid?type=" + dataSourceType + startdate + status + enddate,
     	dataType: 'json',
     	success: function (response) {
         	    geojson = L.geoJson(response, {
@@ -50,6 +60,27 @@ function callServiceForOverlay(){
          $('.slider-arrow').click();
     	}
   	});
+}
+         
+function addGeoJsonToMap(geoUrl){
+  $.ajax({
+      type: "GET",
+      url: geoUrl,
+      dataType: 'json',
+      success: function (response) {
+             L.geoJson(response, {style: wardStyle}
+          ).addTo(Window.map);
+            
+      }
+    });
+}
+
+function wardStyle(feature){
+    return{
+      fill:'',
+      weight:1,
+      opacity:1
+    };
 }
 
 function style(feature) {
