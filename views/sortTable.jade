@@ -1,0 +1,396 @@
+html
+  head
+    link(rel='stylesheet', href='/jquery-ui.css')
+    script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js')
+    script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js')
+    style(type='text/css').  
+      body{
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            position: relative;
+            width: 800px;
+        }
+        
+        .axis text {
+            font: 10px sans-serif;
+        }
+        
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        
+        .selected {
+            fill: yellow;
+            fill-opacity: .4;
+        }
+
+        .bar {
+            fill: steelblue;
+            fill-opacity: .2;
+        }
+        
+        .bar text {
+            font: 10px sans-serif;
+            fill: black;
+        }
+        .y.axis path {
+            display: none;
+        }
+        
+        label {
+            position: top;
+            top: 10px;
+            right: 10px;
+        }
+
+        .background {
+            fill: none;
+            pointer-events: all;
+        }
+        
+        #WARD {
+            fill: none;
+            stroke: #aaa;
+            stroke-linejoin: round;
+        }
+        
+        #WARD .active {
+            stroke: yellow;
+            stroke-opacity:.8;
+            stroke-width: 4.5px;
+            stroke-linejoin: round;
+        }
+        
+        #params{
+          position: relative;
+          float: left;
+          width: 300px;
+          padding:10px;
+          //- border:solid;
+        }
+
+        #barGraph{
+          position: relative;
+          clear: both;
+        }
+        
+        #map{
+            position: relative;
+            float: right;
+            width: 400px;
+            height: 350px;
+            //- border:solid;
+        }
+
+        .ui-widget { font-size:11px; }
+
+        .q0-9 { fill:rgb(247,251,255); }
+        .q1-9 { fill:rgb(222,235,247); }
+        .q2-9 { fill:rgb(198,219,239); }
+        .q3-9 { fill:rgb(158,202,225); }
+        .q4-9 { fill:rgb(107,174,214); }
+        .q5-9 { fill:rgb(66,146,198); }
+        .q6-9 { fill:rgb(33,113,181); }
+        .q7-9 { fill:rgb(8,81,156); }
+        .q8-9 { fill:rgb(8,48,107); }
+
+    script(type='text/javascript', src='/d3.v3.min.js')
+    script(type='text/javascript', src='/queue.v1.min.js')
+    script(type='text/javascript', src='/topojson.v0.min.js')
+  h1=title
+  body
+    div#params
+      p Link to 
+        a(href='/' target='_blank') rastergrid map view
+      
+      div(class="ui-widget")
+        p Data Source:
+          select(id="datasource_combo")
+            option(value="rodent_baiting") Rodent Baiting
+            option(value="abandoned_buildings") Abandoned Buildings
+      div(class="ui-widget")
+        p Status:
+          select(id="status_combo")
+            option(value="All") All
+            option(value="Open") Open
+            option(value="Completed") Completed
+        p Start Date:   
+          input(class="datepicker"  type="text" id="startDate")
+        p End Date:   
+          input(class="datepicker"  type="text" id="endDate")
+      button#getOverlay(onClick="callWardSumsService()") Update Results
+    div#map
+    div#barGraph
+    script.
+      $(function() {
+        $( ".datepicker" ).datepicker({
+          minDate: new Date(2013,1-1,1),
+          maxDate: new Date(2014,4-1,10)
+          });
+      });
+
+      var margin = {top: 10, right: 10, bottom: 40, left: 40},
+        width = 800 - margin.left - margin.right,
+        height = 200 - margin.top - margin.bottom;
+        
+        var formatPercent = d3.format(".0%");
+        
+        var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
+        
+        var y = d3.scale.linear().range([height,0]);
+        
+        var xAxis = d3.svg.axis().scale(x).orient("bottom");
+        
+        var yAxis = d3.svg.axis().scale(y).orient("left");
+        //.tickFormat(formatPercent);
+        
+        barGraphDiv = d3.select("#barGraph");
+        var svg = barGraphDiv.append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+      
+        //- d3.tsv("data.tsv", function(error, data) {
+          var wardSumsData;
+          d3.json("/wardSums", function(error, data) {
+               wardSumsData = data;
+               data.sort( function(a, b) { return d3.ascending(a.ward, b.ward); });
+
+
+               data.forEach(function(d) {
+                            d.frequency = +d.frequency;
+                            });
+               
+               x.domain(data.map(function(d) { return d.ward; }));
+               y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+               
+               svg.append("g")
+               .attr("class", "x axis")
+               .attr("transform", "translate(0," + height + ")")
+               .call(xAxis)
+               .append("text")
+               .attr("x",width/2)
+               .attr("y",25)
+               .style("text-anchor", "middle")
+               .text("Wards");
+               
+               svg.append("g")
+               .attr("class", "y axis")
+               .call(yAxis)
+               .append("text")
+               .attr("transform", "rotate(-90)")
+               .attr("y", 6)
+               .attr("dy", ".71em")
+               .style("text-anchor", "end")
+               .text("# of Requests");
+               
+               svg.selectAll(".bar")
+               .data(data)
+               .enter().append("rect")
+               .attr("class", "bar")
+               .attr("id", function(d){ return "wardbar" + d.ward;})
+               .attr("y", function(d) { return y(d.frequency); })
+               .attr("width", x.rangeBand())
+               .attr("x", function(d) { return x(d.ward); })
+               .attr("height", function(d) { return  height - y(d.frequency); })
+               .on("click",click);
+               
+               //- svg.selectAll(".bartext")
+               //- .data(data)
+               //- .enter().append("text")
+               //- .attr("x", function(d) { return x(d.ward); })
+               //- .attr("y", function(d) { return y(d.frequency) + 3; })
+               //- .attr("dy", ".75em")
+               //- .text(function(d) { return d.frequency; });
+               //.attr("x", function(d) { return x(d.frequency); })
+               d3.select("input").on("change", change);
+               
+               //- var sortTimeout = setTimeout(function() {
+               //-                              d3.select("input").property("checked", true).each(change);
+               //-                              }, 2000);
+               
+               function click(d) {
+                //- svg.selectAll(".bar").style("fill",null);
+                //- var hb = d3.select(this);
+                //- hb.style("fill", "Maroon");
+
+                var ward = d3.select(this).attr('id').split("wardbar").join("");
+                highlightWard(ward);
+               }
+               
+               function change() {
+               clearTimeout(sortTimeout);
+               
+               // Copy-on-write since tweens are evaluated after a delay.
+               var y0 = y.domain(data.sort(this.checked
+                                           ? function(a, b) { return b.frequency - a.frequency; }
+                                           : function(a, b) { return d3.ascending(a.ward, b.ward); })
+                                 .map(function(d) { return d.ward; }))
+               .copy();
+               
+               var transition = svg.transition().duration(750),
+               delay = function(d, i) { return i * 50; };
+               
+               transition.selectAll(".bar")
+               .delay(delay)
+               .attr("y", function(d) { return y0(d.ward); });
+               
+               transition.select(".y.axis")
+               .call(yAxis)
+               .selectAll("g")
+               .delay(delay);
+               }
+               });
+      var centered;
+        
+      var quantize = d3.scale.quantize()
+        .domain([0, 240])
+        .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+        
+      //- var projection = d3.geo.albers()
+      //-   .scale(64000)
+      //-   .translate([-8500, 4820])
+      //-   .rotate([98,0,-0.4]);
+        //- .center([-87.6278, 41.8819]);
+
+      var projection = d3.geo.albers()
+        .scale(52000)
+        .translate([200, 250])
+        .rotate([87.7278,0])
+        .center([0, 41.751]);
+        console.log("rotation " + projection.rotate());
+
+        var path = d3.geo.path()
+        .projection(projection);
+        
+        //- var svgmap = svgcanvas.append("svg")
+        //- .attr("x",425)
+        //- .attr("height", height);
+
+        mapDiv = d3.select("#map");
+        var svgmap = mapDiv.append("svg")
+        .attr("x",400)
+        .attr("height", 350);
+        //- svgmap.append("rect")
+        //- .attr("class", "background")
+        //- .attr("width", 500)
+        //- .attr("height", height)
+        //- .on("click", click2);
+        
+        //- var gm = svgmap.append("g")
+        //- .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+        //- .append("g")
+        //- .attr("id","WARD");
+        
+        var gm = svgmap.append("g")
+        .attr("id","WARD");
+
+        queue()
+        .defer(d3.json, "/temporary/Wards.json")
+        .defer(d3.json, "/wardSums")
+        .await(ready);
+
+        function ready(error, us, unemployment) {
+            var rateById = {};
+            
+            unemployment.forEach(function(d) { rateById[d.ward] = +d.frequency; });
+
+            gm.selectAll("path")
+            .data(us.features)
+            .enter().append("path")
+            .attr("class", function(d) { return quantize(rateById[d.properties.WARD]); })
+            .attr("id",  function(d){return  "ward" + d.properties.WARD; })
+            .attr("d", path)
+            .on("click", click2);
+           
+        }
+
+
+
+        function highlightWard(ward){
+          if(ward){
+            svg.selectAll(".bar").style("fill",null);
+            svg.selectAll(".selected").attr("class", "bar")
+            var hb = svg.select("#wardbar" + ward);
+            //var hb = d3.select("#50");
+            //- hb.style("fill", "green");
+            hb.attr("class", "selected");
+
+            gm.selectAll("path").classed("active", false);
+            gm.select("#ward" + ward)
+            .classed("active", true);
+          };
+            
+        }
+
+
+        function click2(d) {
+            var x = 0,
+            y = 0,
+            k = 1;
+
+            //var zip = d3.select(this.parentNode).attr('class').split('zip z').join('');
+            var ward = d3.select(this).attr('id').split("ward").join("");
+            highlightWard(ward);
+        }
+
+      function callWardSumsService(){
+        var dataSourceType = $("#datasource_combo").val();
+        var status = "";
+        var startdate="";
+        var enddate="";
+
+        if($("#status_combo").val().length>0){
+          status = "&status=" + $("#status_combo").val();
+        };
+
+        if($("#startDate").val().length>0){
+          startdate = "&startdate=" + encodeURIComponent($("#startDate").val());
+        };
+
+        if($("#endDate").val().length>0){
+          enddate = "&enddate=" + encodeURIComponent($("#endDate").val());
+        };
+        // console.log(dataSourceType);
+        
+        
+        $.ajax({
+            type: "GET",
+            url: "/wardSums?type=" + dataSourceType + startdate + status + enddate,
+            dataType: 'json',
+            success: function (response) {
+
+              //- update data for themtic ward map
+              var rateById = {};
+            
+              response.forEach(function(d) { rateById[d.ward] = +d.frequency; });
+              var maxY = d3.max(response, function(d) { return d.frequency; });
+              quantize = d3.scale.quantize()
+                .domain([0, maxY])
+                .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+
+              gm.selectAll("path")
+              .attr("class", function(d) { return quantize(rateById[d.properties.WARD]); });
+           
+              //- update the data for bar chart
+              response.forEach(function(d) {
+                            d.frequency = +d.frequency;
+                        });
+              response.map(function(d) { return d.ward; });
+
+              y.domain([0, maxY]);
+              yAxis = d3.svg.axis().scale(y).orient("left");
+
+              svg.selectAll(".bar")
+               .data(response)
+               .attr("class", "bar")
+               .attr("id", function(d){ return "wardbar" + d.ward;})
+               .attr("y", function(d) { return y(d.frequency); })
+               .attr("width", x.rangeBand())
+               .attr("x", function(d) { return x(d.ward); })
+               .attr("height", function(d) { return  height - y(d.frequency); });
+
+               svg.selectAll("g.y.axis").call(yAxis);
+            }
+          });
+      }
