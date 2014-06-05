@@ -7,10 +7,10 @@ html
     script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js')
     script(type='text/javascript', src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js')
     script(type='text/javascript', src='/chicago_malachy.js')
+    script(type='text/javascript', src='/chicago_map.js')
     script.
       $(document).ready(function(){
-      //- var geojson;
-      //- var info = L.control();
+      
       Window.map = L.map('map').setView([41.8819, -87.6278], 11);
       var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
       var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';

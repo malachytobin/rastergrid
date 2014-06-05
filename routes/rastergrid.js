@@ -45,10 +45,7 @@ exports.geojson = function(req, res) {
 	gridSum["length"]=0;
 	getSumValues(_get, function(err, data){
 		console.log("data and number of gridsums " + gridSum["length"]);
-		// res.send({"hello":"world"});
-		// once we get the gridSum values, need to loop through features array to add value
-		// res.send(JSON.stringify(gridSum));
-		// features.forEach(function(feat){
+
 		featureArray =[];
 		for (var k=0; k<features.length; k++){
 			var featProps = features[k].properties;

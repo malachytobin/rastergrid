@@ -1,44 +1,78 @@
-var info = L.control();
-var geojson;
 
- $(function(){
-  	$('.slider-arrow').click(function(){
-    		if($(this).hasClass('show')){
-    		$( ".slider-arrow, .panel" ).animate({
-      		  left: "+=300"
-      		}, 700, function() {
-       		  // Animation complete.
-      		});
-      	$(this).html('&laquo;').removeClass('show').addClass('hide');
-    }
-    else {      
-    $( ".slider-arrow, .panel" ).animate({
-      left: "-=300"
-      }, 700, function() {
-        // Animation complete.
-      });
-      $(this).html('&raquo;').removeClass('hide').addClass('show');    
-    }
-  });
-});
+function getUrlParameters(){
+  var dataSourceType = $("#datasource_combo").val();
+        var status = "";
+        var startdate="";
+        var enddate="";
+        if($("#status_combo").val().length>0){
+          status = "&status=" + $("#status_combo").val();
+        };
+
+        if($("#startDate").val().length>0){
+          startdate = "&startdate=" + encodeURIComponent($("#startDate").val());
+        };
+
+        if($("#endDate").val().length>0){
+          enddate = "&enddate=" + encodeURIComponent($("#endDate").val());
+        };
+    return dataSourceType + startdate + status + enddate
+}
+
+function callWardSumsService(){
+        
+        var urlParameters = getUrlParameters();
+        $.ajax({
+            type: "GET",
+            url: "/wardSums?type=" + urlParameters,
+            dataType: 'json',
+            success: function (response) {
+
+              //- update data for themtic ward map
+              var rateById = {};
+            
+              response.forEach(function(d) { rateById[d.ward] = +d.frequency; });
+              var maxY = d3.max(response, function(d) { return d.frequency; });
+              quantize = d3.scale.quantize()
+                .domain([0, maxY])
+                .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+
+              gm.selectAll("path")
+              .attr("class", function(d) { return quantize(rateById[d.properties.WARD]); });
+           
+              // set all of the bar heights to 0
+              svg.selectAll(".bar")
+                  .attr("y", height)
+                  .attr("height", 0);
+              svg.selectAll(".selected")
+                  .attr("y", height)
+                  .attr("height", 0);
+              //- update the data for bar chart
+             
+                response.forEach(function(d) {
+                    d.frequency = +d.frequency;
+                });
+                response.map(function(d) { return d.ward; });
+
+                y.domain([0, maxY]);
+                yAxis = d3.svg.axis().scale(y).orient("left");
+
+                svg.selectAll(".bar")
+                 .data(response)
+                 .attr("class", "bar")
+                 .attr("id", function(d){ return "wardbar" + d.ward;})
+                 .attr("y", function(d) { return y(d.frequency); })
+                 .attr("width", x.rangeBand())
+                 .attr("x", function(d) { return x(d.ward); })
+                 .attr("height", function(d) { return  height - y(d.frequency); });
+
+                 svg.selectAll("g.y.axis").call(yAxis);
+              
+            }
+          });
+  }
 
 function callServiceForOverlay(){
-	var dataSourceType = $("#datasource_combo").val();
-	var status = "";
-  var startdate="";
-  var enddate="";
-
-	if($("#status_combo").val().length>0){
-		status = "&status=" + $("#status_combo").val();
-	};
-
-  if($("#startDate").val().length>0){
-    startdate = "&startdate=" + encodeURIComponent($("#startDate").val());
-  };
-
-  if($("#endDate").val().length>0){
-    enddate = "&enddate=" + encodeURIComponent($("#endDate").val());
-  };
+	var urlParameters = getUrlParameters();
 	// console.log(dataSourceType);
 	if(geojson){
 		geojson.clearLayers();
@@ -46,7 +80,7 @@ function callServiceForOverlay(){
 	
 	$.ajax({
     	type: "GET",
-    	url: "/rastergrid?type=" + dataSourceType + startdate + status + enddate,
+    	url: "/rastergrid?type=" + urlParameters,
     	dataType: 'json',
     	success: function (response) {
         	    geojson = L.geoJson(response, {
@@ -62,88 +96,3 @@ function callServiceForOverlay(){
   	});
 }
          
-function addGeoJsonToMap(geoUrl){
-  $.ajax({
-      type: "GET",
-      url: geoUrl,
-      dataType: 'json',
-      success: function (response) {
-             L.geoJson(response, {style: wardStyle}
-          ).addTo(Window.map);
-            
-      }
-    });
-}
-
-function wardStyle(feature){
-    return{
-      fill:'',
-      weight:1,
-      opacity:1
-    };
-}
-
-function style(feature) {
-    return {
-        fillColor: getColor(feature.properties.value),
-        weight: 2,
-        opacity: 1,
-        color: '',
-        dashArray: '0',
-        fillOpacity: 0.45
-    };
-}
-
-	function onEachFeature(feature, layer) {
-	    layer.on({
-	        mouseover: highlightFeature,
-	        mouseout: resetHighlight,
-	        // click: zoomToFeature
-	    });
-	}
-
-function resetHighlight(e) {
-    geojson.resetStyle(e.target);
-    info.update();
-}
-
-
-function highlightFeature(e) {
-	    var layer = e.target;
-
-	    layer.setStyle({
-	        weight: 5,
-	        color: '#666',
-	        dashArray: '',
-	        fillOpacity: 0.7
-	    });
-
-	    if (!L.Browser.ie && !L.Browser.opera) {
-	        layer.bringToFront();
-	    }
-	    info.update(layer.feature.properties);
-}
-function getColor(d) {
-    return d > .06 ? '#800026' :
-           d > .040 ? '#BD0026' :
-           d > .020 ? '#E31A1C' :
-           d > .010 ? '#FC4E2A' :
-           d > .008 ? '#FD8D3C' :
-           d > .004 ? '#FEB24C' :
-           d > .00001 ? '#FED976' :
-           			 	'';
-
-}
-
-info.onAdd = function (map) {
-    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-    this.update();
-    return this._div;
-};
-
-	// method that we will use to update the control based on feature properties passed
-info.update = function (props) {
-    this._div.innerHTML = '<h4>Grid Value</h4>' +  (props ?
-        '<b>' + props.name + '</b><br />' + props.value + ' units'
-        : 'Hover over a grid');
-};

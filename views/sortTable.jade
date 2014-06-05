@@ -3,6 +3,7 @@ html
     link(rel='stylesheet', href='/jquery-ui.css')
     script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js')
     script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js')
+    script(type='text/javascript', src='/chicago_malachy.js')
     style(type='text/css').  
       body{
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -135,14 +136,11 @@ html
          
 
           if($('#datasource_combo').val() == "abandoned_buildings"){
-               //- $('#status_combo').val() = 'All';
                $('#status_combo option').filter(function(){
                   return $(this).text() == 'All';
                 }).attr('selected', true);
                   $('#status_combo').attr('disabled','disabled');
-               //- set status to all and disable
           }else{
-            //- enable status
             $('#status_combo').removeAttr('disabled');
           }
         });
@@ -173,8 +171,8 @@ html
 
 
                data.forEach(function(d) {
-                            d.frequency = +d.frequency;
-                            });
+                    d.frequency = +d.frequency;
+                });
                
                x.domain(data.map(function(d) { return d.ward; }));
                y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
@@ -210,25 +208,9 @@ html
                .attr("height", function(d) { return  height - y(d.frequency); })
                .on("click",click);
                
-               //- svg.selectAll(".bartext")
-               //- .data(data)
-               //- .enter().append("text")
-               //- .attr("x", function(d) { return x(d.ward); })
-               //- .attr("y", function(d) { return y(d.frequency) + 3; })
-               //- .attr("dy", ".75em")
-               //- .text(function(d) { return d.frequency; });
-               //.attr("x", function(d) { return x(d.frequency); })
                d3.select("input").on("change", change);
-               
-               //- var sortTimeout = setTimeout(function() {
-               //-                              d3.select("input").property("checked", true).each(change);
-               //-                              }, 2000);
-               
+              
                function click(d) {
-                //- svg.selectAll(".bar").style("fill",null);
-                //- var hb = d3.select(this);
-                //- hb.style("fill", "Maroon");
-
                 var ward = d3.select(this).attr('id').split("wardbar").join("");
                 highlightWard(ward);
                }
@@ -261,12 +243,6 @@ html
       var quantize = d3.scale.quantize()
         .domain([0, 240])
         .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
-        
-      //- var projection = d3.geo.albers()
-      //-   .scale(64000)
-      //-   .translate([-8500, 4820])
-      //-   .rotate([98,0,-0.4]);
-        //- .center([-87.6278, 41.8819]);
 
       var projection = d3.geo.albers()
         .scale(52000)
@@ -277,25 +253,11 @@ html
 
         var path = d3.geo.path()
         .projection(projection);
-        
-        //- var svgmap = svgcanvas.append("svg")
-        //- .attr("x",425)
-        //- .attr("height", height);
 
         mapDiv = d3.select("#map");
         var svgmap = mapDiv.append("svg")
         .attr("x",400)
         .attr("height", 350);
-        //- svgmap.append("rect")
-        //- .attr("class", "background")
-        //- .attr("width", 500)
-        //- .attr("height", height)
-        //- .on("click", click2);
-        
-        //- var gm = svgmap.append("g")
-        //- .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-        //- .append("g")
-        //- .attr("id","WARD");
         
         var gm = svgmap.append("g")
         .attr("id","WARD");
@@ -327,8 +289,6 @@ html
             svg.selectAll(".bar").style("fill",null);
             svg.selectAll(".selected").attr("class", "bar")
             var hb = svg.select("#wardbar" + ward);
-            //var hb = d3.select("#50");
-            //- hb.style("fill", "green");
             hb.attr("class", "selected");
 
             gm.selectAll("path").classed("active", false);
@@ -349,63 +309,3 @@ html
             highlightWard(ward);
         }
 
-      function callWardSumsService(){
-        var dataSourceType = $("#datasource_combo").val();
-        var status = "";
-        var startdate="";
-        var enddate="";
-
-        if($("#status_combo").val().length>0){
-          status = "&status=" + $("#status_combo").val();
-        };
-
-        if($("#startDate").val().length>0){
-          startdate = "&startdate=" + encodeURIComponent($("#startDate").val());
-        };
-
-        if($("#endDate").val().length>0){
-          enddate = "&enddate=" + encodeURIComponent($("#endDate").val());
-        };
-        // console.log(dataSourceType);
-        
-        
-        $.ajax({
-            type: "GET",
-            url: "/wardSums?type=" + dataSourceType + startdate + status + enddate,
-            dataType: 'json',
-            success: function (response) {
-
-              //- update data for themtic ward map
-              var rateById = {};
-            
-              response.forEach(function(d) { rateById[d.ward] = +d.frequency; });
-              var maxY = d3.max(response, function(d) { return d.frequency; });
-              quantize = d3.scale.quantize()
-                .domain([0, maxY])
-                .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
-
-              gm.selectAll("path")
-              .attr("class", function(d) { return quantize(rateById[d.properties.WARD]); });
-           
-              //- update the data for bar chart
-              response.forEach(function(d) {
-                            d.frequency = +d.frequency;
-                        });
-              response.map(function(d) { return d.ward; });
-
-              y.domain([0, maxY]);
-              yAxis = d3.svg.axis().scale(y).orient("left");
-
-              svg.selectAll(".bar")
-               .data(response)
-               .attr("class", "bar")
-               .attr("id", function(d){ return "wardbar" + d.ward;})
-               .attr("y", function(d) { return y(d.frequency); })
-               .attr("width", x.rangeBand())
-               .attr("x", function(d) { return x(d.ward); })
-               .attr("height", function(d) { return  height - y(d.frequency); });
-
-               svg.selectAll("g.y.axis").call(yAxis);
-            }
-          });
-      }
