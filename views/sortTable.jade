@@ -103,7 +103,7 @@ html
   body
     div#params
       p Link to 
-        a(href='/' target='_blank') rastergrid map view
+        a(href='/grid' target='_blank') rastergrid map view
       
       div(class="ui-widget")
         p Data Source:
@@ -131,6 +131,21 @@ html
           });
       });
 
+      $('#datasource_combo').change(function(){
+         
+
+          if($('#datasource_combo').val() == "abandoned_buildings"){
+               //- $('#status_combo').val() = 'All';
+               $('#status_combo option').filter(function(){
+                  return $(this).text() == 'All';
+                }).attr('selected', true);
+                  $('#status_combo').attr('disabled','disabled');
+               //- set status to all and disable
+          }else{
+            //- enable status
+            $('#status_combo').removeAttr('disabled');
+          }
+        });
       var margin = {top: 10, right: 10, bottom: 40, left: 40},
         width = 800 - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom;

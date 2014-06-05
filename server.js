@@ -13,8 +13,11 @@ app.set('views', __dirname + '/views');
 //set path to static files
 app.use(express.static(__dirname + '/public'));
 //handle GET requests on /
-app.get('/', function(req, res){res.render('index.jade', {title: 'Raster Grid Demo'});});
-app.get('/sortTable', function(req, res){res.render('sortTable.jade', {title:"311 Service Requests By Ward"});});
+app.get('/', function(req, res){
+	res.redirect('/wardChart');
+})
+app.get('/grid', function(req, res){res.render('index.jade', {title: 'Raster Grid Demo'});});
+app.get('/wardChart', function(req, res){res.render('sortTable.jade', {title:"Chicago 311 Service Requests By Ward"});});
 
 app.get('/*', function(req,res,next){
 	res.header('Access-Control-Allow-Origin', '*');
