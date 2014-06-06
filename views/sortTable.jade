@@ -125,25 +125,6 @@ html
     div#map
     div#barGraph
     script.
-      $(function() {
-        $( ".datepicker" ).datepicker({
-          minDate: new Date(2013,1-1,1),
-          maxDate: new Date(2014,4-1,10)
-          });
-      });
-
-      $('#datasource_combo').change(function(){
-         
-
-          if($('#datasource_combo').val() == "abandoned_buildings"){
-               $('#status_combo option').filter(function(){
-                  return $(this).text() == 'All';
-                }).attr('selected', true);
-                  $('#status_combo').attr('disabled','disabled');
-          }else{
-            $('#status_combo').removeAttr('disabled');
-          }
-        });
       var margin = {top: 10, right: 10, bottom: 40, left: 40},
         width = 800 - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom;

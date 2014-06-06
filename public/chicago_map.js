@@ -22,8 +22,6 @@ var geojson;
   });
 });
 
-
-         
 function addGeoJsonToMap(geoUrl){
   $.ajax({
       type: "GET",

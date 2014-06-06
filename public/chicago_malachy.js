@@ -1,3 +1,35 @@
+  $(function() {
+      $( ".datepicker" ).datepicker({
+        minDate: new Date(2014,1-1,1),
+        maxDate: new Date(2014,4-1,10)
+      });
+      $("#startDate").datepicker(
+        'setDate', new Date(2014,1-1,1)
+      );
+      $("#endDate").datepicker(
+        'setDate', new Date(2014,4-1,10)
+      );
+  });
+
+$(function() {
+  $('#datasource_combo').change(function(){
+     if($('#datasource_combo').val() == "abandoned_buildings"){
+      // change status to 'All' and disable status select
+       $('#status_combo option').filter(function(){
+          return $(this).text() == 'All';
+        }).attr('selected', true);
+        $('#status_combo').attr('disabled','disabled');
+        // also need to change min and max dates
+        $( ".datepicker" ).datepicker(
+           'option','minDate',new Date(2013,1-1,1));
+      }else{
+        $('#status_combo').removeAttr('disabled');
+        $( ".datepicker" ).datepicker(
+          'option','minDate',new Date(2014,1-1,1));
+      }
+
+  });
+});
 
 function getUrlParameters(){
   var dataSourceType = $("#datasource_combo").val();
