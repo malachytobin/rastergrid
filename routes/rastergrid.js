@@ -31,8 +31,7 @@ exports.wardSums = function(req, res) {
 	console.log('check for params' + _get["type"] + " - " + _get["startdate"] + " - " + _get["status"]);
 	getMongoWardSums(_get, function(err, results){
 		res.send(JSON.stringify(results));	
-	});
-	
+	});	
 };
 
 exports.geojson = function(req, res) {
@@ -42,7 +41,9 @@ exports.geojson = function(req, res) {
 	var _get = url.parse(req.url, true).query;
 	console.log('check for params' + _get["type"] + " - " + _get["startdate"] + " - " + _get["status"]);
 	features = [];
+	gridSum = {};
 	gridSum["length"]=0;
+
 	getSumValues(_get, function(err, data){
 		console.log("data and number of gridsums " + gridSum["length"]);
 

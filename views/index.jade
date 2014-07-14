@@ -6,6 +6,7 @@ html
     script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js')
     script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js')
     script(type='text/javascript', src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js')
+    script(type='text/javascript', src='/d3.v3.min.js')
     script(type='text/javascript', src='/chicago_malachy.js')
     script(type='text/javascript', src='/chicago_map.js')
     script.
@@ -29,6 +30,7 @@ block content
     a(href='https://data.cityofchicago.org/' target='_blank') Chicago Open Data
     text  to generate grid based heat maps to measure the intensity of different 311 service requests
   p Click on the double arrow (&raquo) on the top left of the map to request a raster grid overlay
+  div#plot
   div#mappanel
     div(class="panel")
       div(class="ui-widget")

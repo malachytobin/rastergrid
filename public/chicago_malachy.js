@@ -102,29 +102,4 @@ function callWardSumsService(){
             }
           });
   }
-
-function callServiceForOverlay(){
-	var urlParameters = getUrlParameters();
-	// console.log(dataSourceType);
-	if(geojson){
-		geojson.clearLayers();
-	};
-	
-	$.ajax({
-    	type: "GET",
-    	url: "/rastergrid?type=" + urlParameters,
-    	dataType: 'json',
-    	success: function (response) {
-        	    geojson = L.geoJson(response, {
-            	style: style,
-				onEachFeature: onEachFeature
-        	}).addTo(Window.map);
-       	    if($('.info')[0]==null){
-       	    	info.addTo(Window.map);
-       	    };
-         
-         $('.slider-arrow').click();
-    	}
-  	});
-}
          
