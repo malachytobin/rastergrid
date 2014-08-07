@@ -11,6 +11,34 @@
   text-align: left;
   
 }
+dl{
+  font-size: 26px;
+}
+dt{
+ font-size: 18px;
+}
+dd{
+  font-size: 16px;
+}
+
+
+.malachy_logo{
+  background: none;
+  border: none;
+  margin: 10px;
+  
+}
+
+.transp_box{
+  /*width: 100%;
+  height: 100%;*/
+  padding: 20px 20px;
+  margin: 10px 10px;
+  background-color: rgb(100,149,237);
+  border: 1px solid gray;
+  opacity:0.85;
+}
+.transp_box a:link{text-decoration: underline;}
 /* Links */
 a,
 a:focus,
@@ -23,8 +51,8 @@ a:hover {
 .btn-default:hover,
 .btn-default:focus {
   color: #333;
-  text-shadow: none; /* Prevent inheritence from `body` */
-  background-color: #fff;
+  text-shadow: none;  Prevent inheritence from `body` 
+  /*background-color: #fff;*/
   border: 1px solid #fff;
 }
 

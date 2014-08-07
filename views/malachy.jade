@@ -15,7 +15,8 @@ html
     style(type='text/css').  
       body{
             background-image:url("/images/skellig.jpg");
-            background-position:bottom;
+            background-position:50% 50%;
+            background-repeat: no-repeat;
         }
 block content
   div(class="site-wrapper")
@@ -30,14 +31,14 @@ block content
               li
                 a(href="about") About
               li
-                a(href="#") Projects
+                a(href="projects") Projects
               li
-                a(href="#") Contact
+                a(href="contact") Contact
         div(class="inner cover")
           h1(class="cover-heading") Malachy Tobin
-           p(class="lead") Software Developer, Tinkerer, Reader, Creator
-           p(class="lead")
-             a(href="#" class="btn btn-lg btn-default") Learn more
+          p(class="lead") Software Developer, Tinkerer, Reader, Creator
+          p(class="lead")
+            a(href="/about" class="btn btn-lg btn-default") Learn more
         div(class="mastfoot")
           div(class="inner" position:right)
             h8#caption Little Skellig Island, off the west coast of Ireland

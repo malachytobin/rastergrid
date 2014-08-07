@@ -14,13 +14,15 @@ app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + '/public'));
 //handle GET requests on /
 app.get('/', function(req, res){
-	res.redirect('/wardChart');
+	res.redirect('/home');
 })
 app.get('/grid', function(req, res){res.render('index.jade', {title: 'Raster Grid Demo'});});
 app.get('/wardChart', function(req, res){res.render('sortTable.jade', {title:"Chicago 311 Service Requests By Ward"});});
 
 app.get('/home', function(req, res){res.render('malachy.jade', {title:"Hello Everybody!"});});
 app.get('/about', function(req, res){res.render('about.jade', {title:"Hello Everybody!"});});
+app.get('/projects', function(req, res){res.render('projects.jade', {title:"Hello Everybody!"});});
+app.get('/contact', function(req, res){res.render('contact.jade', {title:"Hello Everybody!"});});
 // app.get('/*', function(req,res,next){
 // 	res.header('Access-Control-Allow-Origin', '*');
 // 	next();

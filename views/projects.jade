@@ -29,20 +29,22 @@ block content
             ul(class="nav masthead-nav")
               li
                 a(href="home") Home
-              li(class="active")
-                a(href="about") About
               li
+                a(href="about") About
+              li(class="active")
                 a(href="projects") Projects
               li
                 a(href="contact") Contact
         div(class="inner cover")
-          //- h1(class="about_details")
-          h2.lead.about_details
+          h1(class="cover-heading")
+          div()
             div.transp_box
-              img(class="img-thumbnail" src="/images/MalachyTobin.jpeg" width="150px")
-              p
-              p.lead.about_details My name is Malachy. I'm a full-stack software developer based in Chicago. I have worked in both public and private sectors developing web applications, services and automated processes.            
-              p
-              p.lead.about_details I love technology! I also love to run, bike, race sailboats, read and do just about anything with maps. I'm completely obsessed with maps.
+              dl(class="about_details") Current Projects
+                dt <br>Raster Data Map of Chicago Open Data
+                dd I developed a web application, written in Node.js, that displays interactive heat maps of Chicago Open Data. <a href='/grid'>Link</a>
+                dt <br>D3.js interactive graphs of Chicago Open Data
+                dd Another Node.js project, it uses the same data as above but is visualized using the D3 JavaScript library. <a href='/wardChart'>Link</a> 
+                dt <br>Lighthouse Maps
+                dd Inspired by an antique nautical chart I saw in a pub in Ireland in which all the lighthouses lit up on a different sequence, it was mesmerizing. I couldn't find anything like it, so I started making them myself.
 
   

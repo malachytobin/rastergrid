@@ -115,7 +115,7 @@ function callServiceForOverlay(){
               geojson_B.addTo(Window.map);
               layerControl.addOverlay(geojson_B, layerName);
               geojson_B["layerName"] = layerName;
-               createCorrelationChart();
+               // createCorrelationChart();
             };
              
             if($('.info')[0]==null){
