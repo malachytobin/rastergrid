@@ -26,8 +26,12 @@ html
       var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 18, attribution: osmAttrib});
       Window.map.addLayer(osm);
 
-      var wardGeoJson = "/temporary/Wards.json"
-      addGeoJsonToMap(wardGeoJson);
+      //- var wardGeoJson = "/temporary/Wards.json"
+      //- addGeoJsonToMap(wardGeoJson);
+      //- var censusBlockJson = "/censusBlockCnts"
+      //- addGeoJsonToMap(censusBlockJson);
+      //- var mtJson = "/mt"
+      //- addGeoJsonToMap(mtJson);
       });
       $(function() {
       $( ".datepicker" ).datepicker();
@@ -46,6 +50,7 @@ block content
           select(id="datasource_combo")
             option(value="rodent_baiting") Rodent Baiting
             option(value="abandoned_buildings") Abandoned Buildings
+            option(value="potholes") Potholes
       div(class="ui-widget")
         p Status:
           select(id="status_combo")

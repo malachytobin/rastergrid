@@ -44,7 +44,7 @@ function addGeoJsonToMap(geoUrl){
       url: geoUrl,
       dataType: 'json',
       success: function (response) {
-             L.geoJson(response, {style: wardStyle}
+             L.geoJson(response, {style: censusBlockStyle}
           ).addTo(wards);
 
           var overlays = {
@@ -94,29 +94,17 @@ function callServiceForOverlay(){
               .domain([d3.min(response.features, function(d){ return d.properties.value;}), d3.max(response.features, function(d){ return d.properties.value;})])
               .range(d3.range(7).map(function(i) { return i ; }));
 
-            if(geojson_A==null ){
+            if(geojson_A!=null ){
+              Window.map.removeLayer(geojson_A);
+            };
               geojson_A = L.geoJson(response, {
                 style: style,
                 onEachFeature: onEachFeature
                 });
               geojson_A.addTo(Window.map);
-              layerControl.addOverlay(geojson_A, layerName);
+              // layerControl.addOverlay(geojson_A, layerName);
               geojson_A["layerName"] = layerName;
-            }else{
-              // at this point I need to compare the output of both
-              // could create a scatter chart to look at correlation
-              // dig the data from geoJson_A/B and throw them on a chart
-              // create new data set at first
-             
-              geojson_B = L.geoJson(response, {
-                style: style,
-                onEachFeature: onEachFeature
-              });
-              geojson_B.addTo(Window.map);
-              layerControl.addOverlay(geojson_B, layerName);
-              geojson_B["layerName"] = layerName;
-               // createCorrelationChart();
-            };
+          
              
             if($('.info')[0]==null){
               info.addTo(Window.map);
@@ -135,7 +123,6 @@ function createCorrelationChart(){
 //  get json data 
     var chart ={};
       geojson_B.eachLayer(function(d){
-        // console.log("here it is" + d.feature.properties.name);
           var chartFeat = {};
           chartFeat.name = d.feature.properties.name;
           chartFeat.x = d.feature.properties.value;
@@ -144,7 +131,6 @@ function createCorrelationChart(){
       });
 
       geojson_A.eachLayer(function(d){
-        // console.log("here it is" + d.feature.properties.name);
         if(chart[d.feature.properties.name]){
           chart[d.feature.properties.name].y = d.feature.properties.value;
         }else{
@@ -207,47 +193,6 @@ function createCorrelationChart(){
         .attr("cx", function (d) { return xScale(d.x); } )
         .attr("cy", function (d) { return yScale(d.y); } );
 
-      //   .attr("cy", function (d) { return y(d.y); } ) // translate y value to a pixel
-      // .attr("cx", function (d) { return x(d.y); } ) 
-
-    // d3.json("/wardSums", function(error, data) {
-
-    //     data.forEach(function(d) {
-    //        d.frequency = +d.frequency;
-    //     });
-
-    //     x.domain(data.map(function(d) { return d.ward; }));
-    //     y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
-               
-    //            svg.append("g")
-    //            .attr("class", "x axis")
-    //            .attr("transform", "translate(0," + height + ")")
-    //            .call(xAxis)
-    //            .append("text")
-    //            .attr("x",width/2)
-    //            .attr("y",25)
-    //            .style("text-anchor", "middle")
-    //            .text("Wards");
-               
-    //            svg.append("g")
-    //            .attr("class", "y axis")
-    //            .call(yAxis)
-    //            .append("text")
-    //            .attr("transform", "rotate(-90)")
-    //            .attr("y", 6)
-    //            .attr("dy", ".71em")
-    //            .style("text-anchor", "end")
-    //            .text("# of Requests");
-               
-    //            svg.selectAll(".dot")
-    //            .data(data)
-    //            .enter().append("circle")
-    //            .attr("class", "dot")
-    //            .attr("r", 2.5)
-    //            .attr("id", function(d){ return "wardbar" + d.ward;})
-    //            .attr("cy", function(d) { return y(d.frequency); })
-    //            .attr("cx", function(d) { return x(d.ward); });
-    //   });
 }
 
 function getObjectToArray(obj){
@@ -293,8 +238,19 @@ function getCorrelation(xArray, yArray) {
   return {r: r, m: m, b: b};
 }
 
-function wardStyle(feature){
+function censusBlockStyle(feature){
     return{
+      fillColor:getCensusBlockColor(feature.properties.mostCommonComplaint),
+      fillOpacity:0.6,
+      weight:1,
+      color:'',
+      opacity:0.8
+    };
+}
+
+function wardStyle_original(feature){
+    return{
+
       fill:'',
       weight:1,
       opacity:1
@@ -342,8 +298,18 @@ function highlightFeature(e) {
 	    info.update(layer.feature.properties);
 }
 
+function getCensusBlockColor(d) {
+    return d == 'potholes' ? '#800026': //maroon
+           d == 'aband_veh' ? '#DC49FD': //purple
+           d == 'alley_light_out' ? '#E31A1C': //red
+           d == 'rodent' ? '#494CFD': //dark blue
+           d == 'street_light_out' ? '#FD8D3C': //tangerine
+           d == 'graffiti' ? '#49FD82': //bright green
+           d == 'sanViol' ? '#49E2FD': //light blue
+                  '';
+}
 function getColor(d) {
-    return d == 6 ? '#800026' :
+    return d == 6 ? '#800026' : 
            d == 5 ? '#BD0026' :
            d == 4 ? '#E31A1C' :
            d == 3 ? '#FC4E2A' :

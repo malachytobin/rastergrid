@@ -30,11 +30,7 @@ app.get('/contact', function(req, res){res.render('contact.jade', {title:"Hello 
 
 app.get('/rastergrid', rastergrid.geojson);
 app.get('/wardSums', rastergrid.wardSums);
-app.get('/slow', rastergrid.slow);
-// app.get('/rastergrid/:id', rastergrid.findById);
-// app.post('/rastergrid', wines.addWine);
-// app.put('/rastergrid/:id', wines.updateWine);
-// app.delete('/rastergrid/:id', wines.deleteWine);
+app.get('/censusBlockCnts', rastergrid.censusBlockCnts);
  
 app.listen(3000);
 console.log('Listening on port 3000...');

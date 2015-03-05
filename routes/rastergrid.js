@@ -5,7 +5,6 @@ var numbers = [Math.random(), Math.random(), Math.random(), Math.random(), Math.
   queue = [];
 
 var gridSum = {};
-var features = [];
 var Server = mongo.Server,
 	Db = mongo.Db,
 	BSON = mongo.BSONPure;
@@ -34,45 +33,134 @@ exports.wardSums = function(req, res) {
 	});	
 };
 
+exports.censusBlockCnts = function(req, res) {
+	console.log('getting censusBlockCnts');
+	var _get = url.parse(req.url, true).query;
+	// console.log('check for params' + _get["type"] + " - " + _get["startdate"] + " - " + _get["status"]);
+	// get censusBlocks
+	var collectionNames=['graffiti','potholes','rodent','sanViol','alley_light_out','street_light_out','aband_veh','bldg_inspection']
+	var output = getAggregationByGeo('census_block',collectionNames);
+
+	getMongoCensusBlocks(_get, function(err, results){
+		results.features.forEach(function(censusBlock){
+			var geoCnts = output[censusBlock.properties.census_block_value];
+			
+			if(geoCnts!=null){
+				geoCnts.mostCommonComplaint = getMostCommonComplaint(geoCnts);
+
+				geoCnts.census_block_value = censusBlock.properties.census_block_value;
+				censusBlock.properties = geoCnts;
+			}
+		});
+		res.send(JSON.stringify(results));	
+	});	
+};
+
+module.exports.getMostCommonComplaint = getMostCommonComplaint;
+
+ function getMostCommonComplaint(geoCnts){
+	var highestValue=0;
+	var retPropName="";
+		for(var propt in geoCnts){
+			if(geoCnts[propt]>highestValue){
+				retPropName = propt;
+				highestValue = geoCnts[propt];
+			}
+		}
+		return retPropName;
+};
+
+exports.getAggregationByGeo = function(geoName, collectionNames){
+
+	var geoCounts={};
+	collectionNames.forEach(function(collName){
+		db.collection(collName, function(err, collection){
+		var qry ="[";
+		
+		qry += JSON.stringify({"$group": {"_id": "$" + geoName, "count": {"$sum":1}}});
+		qry += "]";
+		console.log(qry);
+		qry = JSON.parse(qry);
+
+		collection.aggregate(qry, function(err, items){
+			items.forEach(function(item){
+				var geo = geoCounts[item._id];
+				if(geo==null){
+					geo ={};
+				}
+				geo[collName] = item.count; 
+				
+				geoCounts[item._id] = geo;
+				// console.log(item._id + "-" + geo);
+			})
+			});
+		});
+	});
+ return geoCounts;
+}
+
 exports.geojson = function(req, res) {
 	// var id = req.params.id;
 	console.log('Retrieving geojson: ');
 	
 	var _get = url.parse(req.url, true).query;
 	console.log('check for params' + _get["type"] + " - " + _get["startdate"] + " - " + _get["status"]);
-	features = [];
 	gridSum = {};
 	gridSum["length"]=0;
 
-	getSumValues(_get, function(err, data){
-		console.log("data and number of gridsums " + gridSum["length"]);
+	getSumValues(_get, function(err, features){
+		console.log("number of features/grids " + features.length);
 
-		featureArray =[];
-		for (var k=0; k<features.length; k++){
-			var featProps = features[k].properties;
-			
-			if(gridSum[featProps.name]){
-				featProps["value"] = gridSum[featProps.name];
-				featureArray.push(features[k]);
-				// console.log(featProps.name + ";" + gridSum[featProps.name]);
-			};
-		};
-		res.send(JSON.stringify(createGeoJson(featureArray)));
+		res.send(JSON.stringify(createGeoJson(features)));
 
 	});
-	features = [];
 };
 
-exports.slow = function(req, res){
-	features = [];
-	console.log('Retrieving slow: ');
-	res.send(JSON.stringify(createGeoJson()));
-	features = [];
+function getArray(parameters, func){
+	var collections =["abandoned_buildings", "potholes","rodent_baiting"];
+	
+ var i=0;
+ var endCnt = 0;
+ var lastItem = false;
+ gridSum = {};
+// call 
+var qry = {"grid_id":{"$in":["67-54","67-55","67-56","67-57","67-58","67-59","67-60"]}};
+qry = {};
+
+			db.collection('gridpoints', function(err, collection){
+					// collection.find({'row':40}).toArray(function(err, grids){
+				collection.find(qry).toArray(function(err, grids){
+					// db.collection('rodent_baiting', function(err, reqCollection){
+						endCnt = grids.length*collections.length;
+						console.log("endCnt [" + endCnt + "]");
+						grids.forEach(function(grid){
+							
+							// for each gridid
+							gridSum[grid.grid_id] = createEmptyGridObj(collections);
+
+							var feat = createFunctionWithCollectionCnts("Feature",grid.grid_id, null, "Polygon",grid.geoCoordsJson, collections);
+							
+							collections.forEach(function(collectionName){
+								findNearbyGridPointsAndSum(grid.grid_id, parameters, collectionName, function(err, value){
+									
+									feat.properties[collectionName] = value;
+									gridSum[grid.grid_id] = feat;
+									
+									i++;
+									if(endCnt==i){
+										func(null, gridSum);
+									}
+								});	
+						});
+
+					});
+				})
+
+			})
 };
 
-function getCoreQry(getParams){
 
-}
+module.exports.getWardSumsQuery = getWardSumsQuery;
 
 function getWardSumsQuery(getParams, groupQry){
 	var qry ;
@@ -104,11 +192,39 @@ function getWardSumsQuery(getParams, groupQry){
 		qry = qry.slice(0, -1);
 		qry+= "]}}";
 	}
-	console.log(qry);
+	// console.log(qry);
 	if(qry){
 		return JSON.parse(qry);
 	}
 	return qry;
+};
+
+function getMongoCensusBlocks(params, func){
+	var geoJson = {};
+	geoJson["type"] = "FeatureCollection";
+	var featureArray =[];
+	var j=0;
+
+	// call mongo to get all census blocks in json form and return
+	db.collection("census_blocks", function(err, collection){
+		collection.find().toArray(function(err,items){
+			items.forEach(function(item){
+				var geo ={};
+				geo.geometry = item.geography;
+				geo.type ="Feature";
+				var prop={};
+				prop.census_block_value = item.census_block_value;
+				geo.properties =prop;
+				// if(j<24){
+					featureArray.push(geo);	
+				// }
+				j++;
+
+			});
+			geoJson["features"] = featureArray;
+			return func(null, geoJson);
+		});
+	})
 };
 
 function getMongoWardSums(params, func){
@@ -152,25 +268,48 @@ function getMongoWardSums(params, func){
 	// return wardSumResponse;
 };
 
-function createGeoJson(featureArray){
-	if(features.length ==0){
-		coords1 = [[[-87.6278, 41.8819],[-87.5278, 41.8819],[-87.5278, 41.7819],[-87.6278, 41.7819],[-87.6278, 41.8819]]];
-		features.push(createFeature("Feature","grid A", null, "Polygon",coords1));
-
-		coords2 = [[[-87.6278, 41.8819],[-87.6278, 41.7819],[-87.7278, 41.7819],[-87.7278, 41.8819],[-87.6278, 41.8819]]];
-		features.push(createFeature("Feature","grid B", 32, "Polygon",coords2));
-	}
-
+function createGeoJsonFromObject(featureObj){
+	
 	var geoJson = {};
 	geoJson["type"] = "FeatureCollection";
+	featureArray = [];
+	for(var property in featureObj){
+		if (featureObj.hasOwnProperty(property)) {
+	        featureArray.push(featureObj[property]);
+	    }
+	}
+
 	if(featureArray){
 		geoJson["features"] = featureArray;
-	}else{
-		geoJson["features"] = features;	
 	}
 	
 	return geoJson;
+};
 
+function createGeoJson(featureArray){
+	
+	var geoJson = {};
+	geoJson["type"] = "FeatureCollection";
+
+	geoJson["features"] = featureArray;
+	
+	
+	return geoJson;
+
+};
+
+function createFunctionWithCollectionCnts(type, name, value, geomType, geometryCoords, collections){
+	var feature = createFeature(type, name, value, geomType, geometryCoords);
+
+	var gridIdObj ={};
+	gridIdObj.name = name;
+	gridIdObj.value = value;
+	for(var i=0; i< collections.length; i++){
+		gridIdObj[collections[i]] = 0;
+	}
+
+	feature.properties = gridIdObj;
+	return feature;
 };
 
 function createFeature(type, name, value, geomType, geometryCoords){
@@ -188,36 +327,49 @@ function createFeature(type, name, value, geomType, geometryCoords){
 	return feature;
 };
 
+function createCensusBlock(type, name, value, geometry){
+	var feature = {};
+	feature["type"] = type;
+	var properties = {};
+	properties["name"] = name;
+	properties["value"] = value;
+	feature["properties"] = properties;
+	
+	feature["geometry"] = geometry;
+
+	return feature;
+};
+
 function getSumValues(getParams, func) {
-		
+ var collections =["abandoned_buildings", "potholes","rodent_baiting"];
+	
  var i=0;
- var lastItem = false;
+ var features = [];
 // call 
 			db.collection('gridpoints', function(err, collection){
-					// collection.find({'row':40}).toArray(function(err, grids){
 				collection.find().toArray(function(err, grids){
-					// db.collection('rodent_baiting', function(err, reqCollection){
 						grids.forEach(function(grid){
-							
-								features.push(createFeature("Feature",grid.grid_id, null, "Polygon",grid.geoCoordsJson));
-														// 
-							findNearbyGridPointsAndSum(grid.grid_id, getParams, function(err, rod_items){
-								// gridSum[grid.grid_id] = 11.1;
+		
+							findNearbyGridPointsAndSum(grid.grid_id, getParams, getParams["type"], function(err, value){
+								
+								if(value>0){
+									var feat = createFeature("Feature",grid.grid_id, null, "Polygon",grid.geoCoordsJson);
+									var feat_props ={"name": grid.grid_id,
+															 "value": value};
+									feat.properties = feat_props;
+									features.push(feat);
+								}	
+									
 								i++;
 								if(i==grids.length){
-									console.log(i + " last item / rodent items " +  grids.length);
-									func(null, rod_items);
+									func(null, features);
 								}
+							});	
 
-							});
-							// i++;
 						});
-						
-					// });
 				});
 			});
 	
-
 };
 
 function getGridPtVal(distFt, radiusFt){
@@ -226,6 +378,45 @@ function getGridPtVal(distFt, radiusFt){
 	}else{
 		return 1/distFt;
 	}
+};
+
+function getDistWithRadius(dist, radius){
+	var retDist =0;
+	if(dist<radius){
+		retDist = radius;
+	}else{
+		retDist =dist;
+	}
+	return retDist;
+}
+
+
+function getGridPtValFromList(rows, gridId, radiusFt, func){
+	var sumFt =0;
+	var sumInvFt =0;
+	var targetGridDist;
+	var retValue = 0;
+	var gridPts = [];
+
+	for(var i = 0, l= rows.length; i <l; i++){
+		for(var p=0; p < rows[i].gridPts.length; p++){
+			var gp = rows[i].gridPts[p];
+			sumFt =+ getDistWithRadius(gp.distanceFt,radiusFt/2);
+			if(gp.grid_id==gridId){
+				targetGridDist= getDistWithRadius(gp.distanceFt,radiusFt/2);
+			}
+		}
+		if(targetGridDist!=null){
+			for(var p=0; p < rows[i].gridPts.length; p++){
+				var gp = rows[i].gridPts[p];
+				sumInvFt =+ sumFt/getDistWithRadius(gp.distanceFt,radiusFt/2);
+			};
+			retValue += sumFt/(targetGridDist*sumInvFt);
+		};	
+		
+	};
+
+	return func(null, retValue);
 };
 
 function getMongoQryString(getParams, gridId){
@@ -267,36 +458,27 @@ function getMongoQryString(getParams, gridId){
 	return JSON.parse(qry);
 }
 
-function findNearbyGridPointsAndSum(gridId, getParams, callback){
-	// console.log("here we are");
-	var collectionName = getParams["type"];
+function createEmptyGridObj(collections){
+	var gridIdObj ={};
+	for(var i=0; i< collections.length; i++){
+		gridIdObj[collections[i]] = 0;
+	}
 
+	return gridIdObj;
+}
 
-			db.collection(collectionName, function(err, collection){
+function findNearbyGridPointsAndSum(gridId, getParams, collName, callback){
+
+			db.collection(collName, function(err, collection){
 				var qry = getMongoQryString(getParams, gridId);
 				
 				collection.find(qry).toArray(function(err, rod_items){
-					if(rod_items){
-						rod_items.forEach(function(rod){
-						for(var i = 0, l= rod.gridPts.length; i <l; i++){
-							var gridpts_entry = rod.gridPts[i];
-							if(gridpts_entry.grid_id===gridId){
-								if(gridSum[gridId]>0){
-									gridSum[gridId]+= getGridPtVal(gridpts_entry.distanceFt, 660);	
-								}else{
-									gridSum[gridId] = getGridPtVal(gridpts_entry.distanceFt, 660);	
-									gridSum["length"]++;	
-								}
-								
-								// console.log( gridpts_entry.grid_id + "[" + gridpts_entry.distanceFt + "]" + gridSum[gridId]);
-							};
-						};
+					getGridPtValFromList(rod_items, gridId, 660, function(err, gridValue){
+						// console.log(gridId + "[" + gridValue + "] " + collName);
+						callback(null, gridValue);
 					});
-					}
-					// console.log(gridId + " " + gridSum['81-56']);
-					callback(null, rod_items);
+
 				});
-				// loop through gridPts if it matches entry.grid_id, add it to gridSum
 			});
-	
+						
 };
